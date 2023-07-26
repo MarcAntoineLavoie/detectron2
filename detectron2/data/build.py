@@ -239,28 +239,40 @@ def get_detection_dataset_dicts(
     if isinstance(names, str):
         names = [names]
     assert len(names), names
-    dataset_dicts = [DatasetCatalog.get(dataset_name) for dataset_name in names]
 
-    if isinstance(dataset_dicts[0], torchdata.Dataset):
-        if len(dataset_dicts) > 1:
-            # ConcatDataset does not work for iterable style dataset.
-            # We could support concat for iterable as well, but it's often
-            # not a good idea to concat iterables anyway.
-            return torchdata.ConcatDataset(dataset_dicts)
-        return dataset_dicts[0]
+    if names[0] == 'cityscapes_foggy_train':
+        import pickle
+        with open('/home/marc/Documents/trailab_work/detectron2/detectron2/data/cityscapes_foggy_dict.pkl', 'rb') as f_in:
+            dataset_dicts = pickle.load(f_in)
 
-    for dataset_name, dicts in zip(names, dataset_dicts):
-        assert len(dicts), "Dataset '{}' is empty!".format(dataset_name)
+    elif names[0] == 'cityscapes_fine_instance_seg_train':
+        import pickle
+        with open('/home/marc/Documents/trailab_work/detectron2/detectron2/data/cityscapes_dict.pkl', 'rb') as f_in:
+            dataset_dicts = pickle.load(f_in)
+    
+    else:
+        dataset_dicts = [DatasetCatalog.get(dataset_name) for dataset_name in names]
 
-    if proposal_files is not None:
-        assert len(names) == len(proposal_files)
-        # load precomputed proposals from proposal files
-        dataset_dicts = [
-            load_proposals_into_dataset(dataset_i_dicts, proposal_file)
-            for dataset_i_dicts, proposal_file in zip(dataset_dicts, proposal_files)
-        ]
+        if isinstance(dataset_dicts[0], torchdata.Dataset):
+            if len(dataset_dicts) > 1:
+                # ConcatDataset does not work for iterable style dataset.
+                # We could support concat for iterable as well, but it's often
+                # not a good idea to concat iterables anyway.
+                return torchdata.ConcatDataset(dataset_dicts)
+            return dataset_dicts[0]
 
-    dataset_dicts = list(itertools.chain.from_iterable(dataset_dicts))
+        for dataset_name, dicts in zip(names, dataset_dicts):
+            assert len(dicts), "Dataset '{}' is empty!".format(dataset_name)
+
+        if proposal_files is not None:
+            assert len(names) == len(proposal_files)
+            # load precomputed proposals from proposal files
+            dataset_dicts = [
+                load_proposals_into_dataset(dataset_i_dicts, proposal_file)
+                for dataset_i_dicts, proposal_file in zip(dataset_dicts, proposal_files)
+            ]
+
+        dataset_dicts = list(itertools.chain.from_iterable(dataset_dicts))
 
     has_instances = "annotations" in dataset_dicts[0]
     if filter_empty and has_instances:

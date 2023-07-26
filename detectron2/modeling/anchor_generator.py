@@ -114,7 +114,7 @@ class DefaultAnchorGenerator(nn.Module):
                 Recommend to use 0.5, which means half stride.
         """
         super().__init__()
-
+        # print('\n \n DEFAULT ANCHORS ', aspect_ratios, ' \n \n')
         self.strides = strides
         self.num_features = len(self.strides)
         sizes = _broadcast_params(sizes, self.num_features, "sizes")
@@ -171,6 +171,7 @@ class DefaultAnchorGenerator(nn.Module):
         # buffers() not supported by torchscript. use named_buffers() instead
         buffers: List[torch.Tensor] = [x[1] for x in self.cell_anchors.named_buffers()]
         for size, stride, base_anchors in zip(grid_sizes, self.strides, buffers):
+            # print('base_anchors', base_anchors)
             shift_x, shift_y = _create_grid_offsets(size, stride, self.offset, base_anchors)
             shifts = torch.stack((shift_x, shift_y, shift_x, shift_y), dim=1)
 
@@ -201,6 +202,7 @@ class DefaultAnchorGenerator(nn.Module):
         # See also https://github.com/facebookresearch/Detectron/issues/227
 
         anchors = []
+        # print('gen anchors')
         for size in sizes:
             area = size**2.0
             for aspect_ratio in aspect_ratios:
@@ -378,9 +380,13 @@ class RotatedAnchorGenerator(nn.Module):
         return [RotatedBoxes(x) for x in anchors_over_all_feature_maps]
 
 
+
+
+
 def build_anchor_generator(cfg, input_shape):
     """
     Built an anchor generator from `cfg.MODEL.ANCHOR_GENERATOR.NAME`.
     """
     anchor_generator = cfg.MODEL.ANCHOR_GENERATOR.NAME
+    # anchor_generator = "DifferentiableAnchorGenerator"
     return ANCHOR_GENERATOR_REGISTRY.get(anchor_generator)(cfg, input_shape)
