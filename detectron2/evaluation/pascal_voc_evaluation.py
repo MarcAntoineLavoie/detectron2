@@ -137,9 +137,14 @@ def parse_rec(filename):
     for obj in tree.findall("object"):
         obj_struct = {}
         obj_struct["name"] = obj.find("name").text
-        obj_struct["pose"] = obj.find("pose").text
-        obj_struct["truncated"] = int(obj.find("truncated").text)
-        obj_struct["difficult"] = int(obj.find("difficult").text)
+        if tree.find("folder").text == 'Cityscapes':
+            obj_struct["pose"] = "Unspecified"
+            obj_struct["truncated"] = 0
+            obj_struct["difficult"] = 0
+        else:
+            obj_struct["pose"] = obj.find("pose").text
+            obj_struct["truncated"] = int(obj.find("truncated").text)
+            obj_struct["difficult"] = int(obj.find("difficult").text)
         bbox = obj.find("bndbox")
         obj_struct["bbox"] = [
             int(bbox.find("xmin").text),
