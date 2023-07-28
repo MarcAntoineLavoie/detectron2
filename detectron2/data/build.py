@@ -242,12 +242,14 @@ def get_detection_dataset_dicts(
 
     if names[0] == 'cityscapes_foggy_train':
         import pickle
-        with open('/home/marc/Documents/trailab_work/detectron2/detectron2/data/cityscapes_foggy_dict.pkl', 'rb') as f_in:
+        file_name = '/'.join(__file__.split('/')[:-1])+'/cityscapes_foggy_dict.pkl'
+        with open(file_name, 'rb') as f_in:
             dataset_dicts = pickle.load(f_in)
 
     elif names[0] == 'cityscapes_fine_instance_seg_train':
-        import pickle
-        with open('/home/marc/Documents/trailab_work/detectron2/detectron2/data/cityscapes_dict.pkl', 'rb') as f_in:
+        import pickle        
+        file_name = '/'.join(__file__.split('/')[:-1])+'/cityscapes_fine_instance_seg_train.pkl'
+        with open(file_name, 'rb') as f_in:
             dataset_dicts = pickle.load(f_in)
     
     else:
