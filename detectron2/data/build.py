@@ -248,7 +248,7 @@ def get_detection_dataset_dicts(
 
     elif names[0] == 'cityscapes_fine_instance_seg_train':
         import pickle        
-        file_name = '/'.join(__file__.split('/')[:-1])+'/cityscapes_fine_instance_seg_train.pkl'
+        file_name = '/'.join(__file__.split('/')[:-1])+'/cityscapes_dict.pkl'
         with open(file_name, 'rb') as f_in:
             dataset_dicts = pickle.load(f_in)
     
