@@ -620,11 +620,18 @@ def build_resnet_backbone(cfg, input_shape):
     """
     # need registration of new blocks/stems?
     norm = cfg.MODEL.RESNETS.NORM
-    stem = BasicStem(
-        in_channels=input_shape.channels,
-        out_channels=cfg.MODEL.RESNETS.STEM_OUT_CHANNELS,
-        norm=norm,
-    )
+    if "R-50" in cfg.MODEL.WEIGHTS:
+        stem = StemBias(
+            in_channels=input_shape.channels,
+            out_channels=cfg.MODEL.RESNETS.STEM_OUT_CHANNELS,
+            norm=norm,
+        )
+    else:
+        stem = BasicStem(
+            in_channels=input_shape.channels,
+            out_channels=cfg.MODEL.RESNETS.STEM_OUT_CHANNELS,
+            norm=norm,
+        )
 
     # fmt: off
     freeze_at           = cfg.MODEL.BACKBONE.FREEZE_AT
@@ -692,3 +699,35 @@ def build_resnet_backbone(cfg, input_shape):
         bottleneck_channels *= 2
         stages.append(blocks)
     return ResNet(stem, stages, out_features=out_features, freeze_at=freeze_at)
+
+
+class StemBias(CNNBlockBase):
+    """
+    The standard ResNet stem (layers before the first residual block),
+    with a conv, relu and max_pool.
+    """
+
+    def __init__(self, in_channels=3, out_channels=64, norm="BN"):
+        """
+        Args:
+            norm (str or callable): norm after the first conv layer.
+                See :func:`layers.get_norm` for supported format.
+        """
+        super().__init__(in_channels, out_channels, 4)
+        self.in_channels = in_channels
+        self.conv1 = Conv2d(
+            in_channels,
+            out_channels,
+            kernel_size=7,
+            stride=2,
+            padding=3,
+            bias=True,
+            norm=get_norm(norm, out_channels),
+        )
+        weight_init.c2_msra_fill(self.conv1)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = F.relu_(x)
+        x = F.max_pool2d(x, kernel_size=3, stride=2, padding=1)
+        return x
